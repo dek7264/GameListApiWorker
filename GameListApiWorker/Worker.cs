@@ -1,21 +1,48 @@
+using Newtonsoft.Json;
+using RabbitMQ.Client;
+using RabbitMQ.Client.Events;
+using System.Text;
+
 namespace GameListApiWorker
 {
     public class Worker : BackgroundService
     {
-        private readonly ILogger<Worker> _logger;
+        private ILogger<Worker> Logger { get; }
+        private IConfiguration Configuration { get; }
 
-        public Worker(ILogger<Worker> logger)
+        public Worker(ILogger<Worker> logger, IConfiguration configuration)
         {
-            _logger = logger;
+            Logger = logger;
+            Configuration = configuration;
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            while (!stoppingToken.IsCancellationRequested)
+            //while (!stoppingToken.IsCancellationRequested)
+            //{
+            //    _logger.LogInformation("Worker running at: {time}", DateTimeOffset.Now);
+            //    await Task.Delay(1000, stoppingToken);
+            //}
+            var factory = new ConnectionFactory()
             {
-                _logger.LogInformation("Worker running at: {time}", DateTimeOffset.Now);
-                await Task.Delay(1000, stoppingToken);
-            }
+                HostName = Configuration["RabbitMqHostName"]
+            };
+            var queueName = "test-queue-local";
+            var connection = factory.CreateConnection();
+            var channel = connection.CreateModel();
+
+            channel.QueueDeclare(queueName);
+
+            var consumer = new EventingBasicConsumer(channel);
+            consumer.Received += (ch, ea) =>
+            {
+                var message = Encoding.UTF8.GetString(ea.Body.ToArray());
+                //perform processing
+                Logger.LogInformation($"Message Recieved: {{messageBody}}", JsonConvert.SerializeObject(message));
+                channel.BasicAck(ea.DeliveryTag, false);
+            };
+
+            channel.BasicConsume(queueName, false, consumer);
         }
     }
 }
