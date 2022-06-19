@@ -27,19 +27,21 @@ namespace GameListApiWorker
             {
                 HostName = Configuration["RabbitMqHostName"]
             };
+            factory.DispatchConsumersAsync = true;
             var queueName = "test-queue-local";
             var connection = factory.CreateConnection();
             var channel = connection.CreateModel();
 
             channel.QueueDeclare(queueName);
 
-            var consumer = new EventingBasicConsumer(channel);
-            consumer.Received += (ch, ea) =>
+            var consumer = new AsyncEventingBasicConsumer(channel);
+            consumer.Received += async (ch, ea) =>
             {
                 var message = Encoding.UTF8.GetString(ea.Body.ToArray());
                 //perform processing
                 Logger.LogInformation($"Message Recieved: {{messageBody}}", JsonConvert.SerializeObject(message));
                 channel.BasicAck(ea.DeliveryTag, false);
+                await Task.Yield();
             };
 
             channel.BasicConsume(queueName, false, consumer);
