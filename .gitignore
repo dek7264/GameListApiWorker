@@ -351,3 +351,5 @@ MigrationBackup/
 
 *.tfstate*
 .terraform*
+
+*appsettings*
