@@ -1,11 +1,10 @@
-﻿using MassTransit;
+﻿using GameListApiWorker.Contracts;
+using MassTransit;
 using Newtonsoft.Json;
 
 namespace GameListApiWorker
 {
-    public record TestMessage(string TestString, int TestInt);
-
-    public class RabbitMqMessageConsumer : IConsumer<TestMessage>
+    public class RabbitMqMessageConsumer : IConsumer<RabbitMqMessage>
     {
         public ILogger<RabbitMqMessageConsumer> Logger { get; }
 
@@ -14,7 +13,7 @@ namespace GameListApiWorker
             Logger = logger;
         }
 
-        public Task Consume(ConsumeContext<TestMessage> context)
+        public Task Consume(ConsumeContext<RabbitMqMessage> context)
         {
             Logger.LogInformation("Message Consumed! Message: {message}", JsonConvert.SerializeObject(context.Message));
             return Task.CompletedTask;
