@@ -13,7 +13,7 @@ IHost host = Host.CreateDefaultBuilder(args)
 
             x.UsingRabbitMq((context, config) =>
             {
-                config.Host(configuration["RabbitMqConfiguration:HostName"], "/", host =>
+                config.Host(configuration["RabbitMqConfiguration:HostName"], configuration["RabbitMqConfiguration:VHost"], host =>
                 {
                     host.Username(configuration["RabbitMqConfiguration:UserName"]);
                     host.Password(configuration["RabbitMqConfiguration:Password"]);
